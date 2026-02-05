@@ -42,7 +42,11 @@ body {
 }
 
 .widget {
-  background: linear-gradient(145deg, #0f1521, #0a0e15);
+  background: linear-gradient(
+    145deg,
+    rgba(15, 21, 33, 0.75),
+    rgba(10, 14, 21, 0.75)
+  );
   border: 2px solid var(--border);
   border-radius: 24px;
   padding: 35px 45px;
@@ -109,7 +113,6 @@ body {
   pointer-events: none;
 }
 
-/* Flip counter styles */
 .flip-counter {
   display: flex;
   justify-content: center;
@@ -171,7 +174,7 @@ body {
 
 .digit-number {
   font-family: 'Russo One', sans-serif;
-  font-size: 86px;
+  font-size: 95px;
   color: var(--accent);
   text-shadow: 0 0 15px var(--accent-glow);
   letter-spacing: 1px;
@@ -352,9 +355,7 @@ body {
   <div class="title">Залишилось нафармити</div>
 
   <div class="counter-container">
-    <div class="flip-counter" id="flipCounter">
-      <!-- Digits will be inserted here by JavaScript -->
-    </div>
+    <div class="flip-counter" id="flipCounter"></div>
     <div class="counter-label">СРІБЛА</div>
   </div>
 
@@ -362,28 +363,27 @@ body {
     <div class="action">
       <i class="fas fa-money-bill-wave"></i>
       <div class="action-text">Кожні 1 грн донату</div>
-      <div class="action-value">+1 000</div>
+      <div class="action-value">+5 000</div>
     </div>
 
     <div class="action">
       <i class="fas fa-heart"></i>
       <div class="action-text">Кожен лайк</div>
-      <div class="action-value">+5 000</div>
+      <div class="action-value">+10 000</div>
     </div>
 
     <div class="action">
       <i class="fab fa-tiktok"></i>
       <div class="action-text">Тап у TikTok</div>
-      <div class="action-value">+5</div>
+      <div class="action-value">+20</div>
     </div>
   </div>
 </div>
 
 <script>
 let currentValue = 200061000;
-let animatedValue = 200061000;
+let previousDigits = [];
 let digitElements = [];
-let flipTimeout = null;
 let updateInterval = null;
 
 const flipCounter = document.getElementById('flipCounter');
@@ -394,12 +394,15 @@ function formatNumber(num) {
     .replace(/\B(?=(\d{3})+(?!\d))/g, "'");
 }
 
-function createDigitElement(digit, index) {
+function getDigitsArray(num) {
+  return Math.floor(num).toString().split('');
+}
+
+function createDigitGroup(digit, isSeparator = false) {
   const group = document.createElement('div');
   group.className = 'digit-group';
   
-  // For separators (apostrophes)
-  if (digit === "'") {
+  if (isSeparator) {
     const separator = document.createElement('div');
     separator.className = 'separator';
     separator.textContent = "'";
@@ -407,10 +410,8 @@ function createDigitElement(digit, index) {
     return group;
   }
   
-  // Create digit container
   const container = document.createElement('div');
   container.className = 'digit-container';
-  container.dataset.index = index;
   
   const digitDiv = document.createElement('div');
   digitDiv.className = 'digit';
@@ -429,93 +430,99 @@ function createDigitElement(digit, index) {
   numberBack.className = 'digit-number';
   numberBack.textContent = digit;
   
-  front.appendChild(numberFront.cloneNode(true));
-  back.appendChild(numberBack.cloneNode(true));
+  front.appendChild(numberFront);
+  back.appendChild(numberBack);
   
   digitDiv.appendChild(front);
   digitDiv.appendChild(back);
   container.appendChild(digitDiv);
   group.appendChild(container);
   
-  return group;
+  return { group, digitDiv, front: numberFront, back: numberBack };
 }
 
-function renderDigits(value) {
-  const formatted = formatNumber(value);
+function insertSeparators(digitsArray) {
+  const result = [];
+  let count = 0;
+  
+  for (let i = digitsArray.length - 1; i >= 0; i--) {
+    result.unshift(digitsArray[i]);
+    count++;
+    
+    if (count % 3 === 0 && i > 0) {
+      result.unshift("'");
+    }
+  }
+  
+  return result;
+}
+
+function renderFullNumber(value) {
   flipCounter.innerHTML = '';
   digitElements = [];
   
-  for (let i = 0; i < formatted.length; i++) {
-    const digitElement = createDigitElement(formatted[i], i);
-    flipCounter.appendChild(digitElement);
-    
-    if (formatted[i] !== "'") {
-      const container = digitElement.querySelector('.digit-container');
-      if (container) {
-        digitElements.push({
-          element: container.querySelector('.digit'),
-          front: container.querySelector('.digit-front .digit-number'),
-          back: container.querySelector('.digit-back .digit-number'),
-          index: i,
-          currentDigit: formatted[i]
-        });
-      }
+  const digits = getDigitsArray(value);
+  const displayArray = insertSeparators(digits);
+  
+  displayArray.forEach((char, index) => {
+    if (char === "'") {
+      const group = createDigitGroup("'", true);
+      flipCounter.appendChild(group);
+    } else {
+      const { group, digitDiv, front, back } = createDigitGroup(char);
+      flipCounter.appendChild(group);
+      
+      digitElements.push({
+        element: digitDiv,
+        front,
+        back,
+        currentDigit: char
+      });
     }
-  }
+  });
+  
+  previousDigits = digits;
 }
 
 function animateDigitFlip(digitObj, newDigit) {
   if (digitObj.currentDigit === newDigit) return;
   
-  // Set the new digit on the back face
   digitObj.back.textContent = newDigit;
-  
-  // Start the flip animation
   digitObj.element.classList.add('flipping');
   
-  // After the flip, update the front face and reset
   setTimeout(() => {
     digitObj.front.textContent = newDigit;
     digitObj.element.classList.remove('flipping');
     digitObj.currentDigit = newDigit;
-  }, 300); // Half of the animation duration
+  }, 300);
 }
 
-function animateTo(target) {
-  const formattedCurrent = formatNumber(animatedValue);
-  const formattedTarget = formatNumber(target);
+function animateTo(newValue) {
+  const newDigits = getDigitsArray(newValue);
   
-  // Pad with leading zeros if needed
-  const maxLength = Math.max(formattedCurrent.length, formattedTarget.length);
-  const currentPadded = formattedCurrent.padStart(maxLength, '0');
-  const targetPadded = formattedTarget.padStart(maxLength, '0');
+  if (newDigits.length !== previousDigits.length) {
+    renderFullNumber(newValue);
+    currentValue = newValue;
+    return;
+  }
   
-  // Animate each digit that changed
   let delay = 0;
-  for (let i = 0; i < maxLength; i++) {
-    if (currentPadded[i] !== targetPadded[i] && targetPadded[i] !== "'") {
-      // Find the corresponding digit element
-      const digitIndex = Array.from(targetPadded).slice(0, i + 1).filter(c => c !== "'").length - 1;
+  let needsAnimation = false;
+  
+  for (let i = 0; i < newDigits.length; i++) {
+    if (newDigits[i] !== previousDigits[i]) {
+      needsAnimation = true;
+      setTimeout(() => {
+        animateDigitFlip(digitElements[i], newDigits[i]);
+      }, delay);
       
-      if (digitElements[digitIndex]) {
-        setTimeout(() => {
-          animateDigitFlip(digitElements[digitIndex], targetPadded[i]);
-        }, delay);
-        
-        // Stagger the animations for a rolling effect
-        delay += 50;
-      }
+      delay += 50;
     }
   }
   
-  // Update the animated value
-  animatedValue = target;
-  
-  // If no animations were triggered (all digits same), re-render to ensure consistency
-  if (delay === 0) {
-    setTimeout(() => {
-      renderDigits(target);
-    }, 100);
+  if (needsAnimation) {
+    previousDigits = newDigits;
+    currentValue = newValue;
   }
 }
 
@@ -532,29 +539,23 @@ async function fetchData() {
     const newValue = Math.round(json.table.rows[0].c[0].v);
 
     if (newValue !== currentValue) {
-      currentValue = newValue;
-      animateTo(currentValue);
-      console.log('Data updated from Google Sheets:', newValue);
+      animateTo(newValue);
     }
   } catch (e) {
     console.error('Error fetching data from Google Sheets:', e);
-    // Keep current value without demo mode
-    // In case of error, we'll try again in the next interval
   }
 }
 
 function init() {
   const initialValue = 200061000;
   currentValue = initialValue;
-  animatedValue = initialValue;
+  previousDigits = getDigitsArray(initialValue);
   
-  renderDigits(initialValue);
+  renderFullNumber(initialValue);
   
-  // Start regular updates every 15 seconds
-  fetchData(); // Initial fetch
-  updateInterval = setInterval(fetchData, 15000); // Every 15 seconds
+  fetchData();
+  updateInterval = setInterval(fetchData, 15000);
   
-  // Update when tab becomes visible
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       fetchData();
@@ -564,7 +565,6 @@ function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 
-// Clean up interval on page unload
 window.addEventListener('beforeunload', () => {
   if (updateInterval) {
     clearInterval(updateInterval);
