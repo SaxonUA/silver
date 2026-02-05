@@ -6,17 +6,23 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
 :root {
-  --bg: #0b0f14;
-  --panel: #141a22;
-  --border: #2a323d;
-  --text: #eaeef3;
-  --muted: #9aa4b2;
+  --bg: #0a0e15;
+  --panel: #121826;
+  --panel-dark: #0d111b;
+  --border: #2a3549;
+  --border-light: #374560;
+  --text: #f0f4ff;
+  --muted: #8a9bb8;
   --accent: #ffcc00;
+  --accent-glow: rgba(255, 204, 0, 0.3);
+  --shadow: rgba(0, 0, 0, 0.4);
+  --success: #00d9a6;
+  --danger: #ff4757;
 }
 
 * {
@@ -32,91 +38,310 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 .widget {
-  background: linear-gradient(180deg, #121821, #0b0f14);
+  background: linear-gradient(145deg, #0f1521, #0a0e15);
   border: 2px solid var(--border);
-  border-radius: 20px;
-  padding: 30px 40px;
-  min-width: 720px;
+  border-radius: 24px;
+  padding: 35px 45px;
+  min-width: 850px;
   text-align: center;
+  box-shadow: 0 20px 50px var(--shadow),
+              0 0 0 1px rgba(255, 255, 255, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.widget::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), #ff9900);
+  z-index: 1;
 }
 
 .title {
   font-family: 'Russo One', sans-serif;
-  font-size: 42px;
+  font-size: 80px;
   color: var(--text);
-  margin-bottom: 20px;
-}
-
-.counter {
-  background: var(--panel);
-  border: 2px solid var(--border);
-  border-radius: 16px;
-  padding: 30px 20px;
   margin-bottom: 30px;
+  position: relative;
+  padding-bottom: 15px;
+  letter-spacing: 1px;
 }
 
-.counter-value {
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 30%;
+  right: 30%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.counter-container {
+  background: linear-gradient(180deg, var(--panel), var(--panel-dark));
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 35px 25px;
+  margin-bottom: 35px;
+  position: relative;
+  box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.3),
+              0 5px 15px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.counter-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.05), transparent 30%);
+  pointer-events: none;
+}
+
+/* Flip counter styles */
+.flip-counter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 150px;
+  perspective: 1000px;
+}
+
+.digit-group {
+  display: flex;
+  margin: 0 2px;
+}
+
+.digit-container {
+  position: relative;
+  width: 85px;
+  height: 120px;
+  margin: 0 2px;
+  perspective: 800px;
+}
+
+.digit {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.digit.flipping {
+  transform: rotateX(-90deg);
+}
+
+.digit-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.digit-front, .digit-back {
+  background: linear-gradient(180deg, #1a2235, #121826);
+  border: 2px solid var(--border-light);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.digit-front {
+  transform: rotateX(0deg);
+}
+
+.digit-back {
+  transform: rotateX(90deg);
+}
+
+.digit-number {
   font-family: 'Russo One', sans-serif;
-  font-size: 96px;
-  letter-spacing: 4px;
+  font-size: 86px;
   color: var(--accent);
+  text-shadow: 0 0 15px var(--accent-glow);
+  letter-spacing: 1px;
+}
+
+.separator {
+  font-family: 'Russo One', sans-serif;
+  font-size: 86px;
+  color: var(--accent);
+  margin: 0 20px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  text-shadow: 0 0 15px var(--accent-glow);
+}
+
+.counter-label {
+  font-size: 40px;
+  color: var(--muted);
+  margin-top: 25px;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 .actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
+  gap: 20px;
 }
 
 .action {
-  background: #11161d;
+  background: linear-gradient(180deg, #161e30, #121826);
   border: 2px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 15px;
+  border-radius: 18px;
+  padding: 22px 15px;
+  position: relative;
+  overflow: hidden;
+}
+
+.action::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), #ff9900);
+  opacity: 1;
 }
 
 .action i {
-  font-size: 28px;
+  font-size: 32px;
   color: var(--accent);
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 0 5px var(--accent-glow));
 }
 
 .action-text {
-  font-size: 14px;
+  font-size: 30px;
   color: var(--muted);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
 .action-value {
   font-family: 'Russo One', sans-serif;
-  font-size: 22px;
+  font-size: 48px;
   color: var(--text);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .widget {
     min-width: auto;
-    width: 100%;
-    padding: 25px 20px;
+    width: 95%;
+    padding: 30px 25px;
   }
-  .counter-value {
-    font-size: 72px;
+  
+  .digit-container {
+    width: 60px;
+    height: 95px;
   }
+  
+  .digit-number, .separator {
+    font-size: 68px;
+  }
+  
+  .separator {
+    margin: 0 15px;
+  }
+  
   .title {
     font-size: 32px;
   }
+  
   .actions {
     grid-template-columns: 1fr;
+    gap: 15px;
   }
 }
 
-@media (max-width: 600px) {
-  .counter-value {
-    font-size: 56px;
-    letter-spacing: 2px;
+@media (max-width: 700px) {
+  .widget {
+    padding: 25px 20px;
+  }
+  
+  .digit-container {
+    width: 45px;
+    height: 75px;
+    margin: 0 1px;
+  }
+  
+  .digit-number, .separator {
+    font-size: 52px;
+  }
+  
+  .separator {
+    margin: 0 10px;
+    font-size: 52px;
+    height: 75px;
+  }
+  
+  .flip-counter {
+    height: 100px;
+  }
+  
+  .title {
+    font-size: 28px;
+  }
+  
+  .action {
+    padding: 18px 12px;
+  }
+  
+  .action i {
+    font-size: 28px;
+  }
+  
+  .action-value {
+    font-size: 40px;
+  }
+  
+  .counter-label {
+    font-size: 18px;
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 500px) {
+  .digit-container {
+    width: 35px;
+    height: 60px;
+  }
+  
+  .digit-number, .separator {
+    font-size: 40px;
+  }
+  
+  .separator {
+    margin: 0 8px;
+    font-size: 40px;
+    height: 60px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .counter-label {
+    font-size: 16px;
   }
 }
 </style>
@@ -126,8 +351,11 @@ body {
 <div class="widget">
   <div class="title">Залишилось нафармити</div>
 
-  <div class="counter">
-    <div id="counterValue" class="counter-value">0</div>
+  <div class="counter-container">
+    <div class="flip-counter" id="flipCounter">
+      <!-- Digits will be inserted here by JavaScript -->
+    </div>
+    <div class="counter-label">СРІБЛА</div>
   </div>
 
   <div class="actions">
@@ -152,11 +380,13 @@ body {
 </div>
 
 <script>
-let currentValue = 0;
-let animatedValue = 0;
-let animationFrame = null;
+let currentValue = 200061000;
+let animatedValue = 200061000;
+let digitElements = [];
+let flipTimeout = null;
+let updateInterval = null;
 
-const counterEl = document.getElementById('counterValue');
+const flipCounter = document.getElementById('flipCounter');
 
 function formatNumber(num) {
   return Math.floor(num)
@@ -164,38 +394,129 @@ function formatNumber(num) {
     .replace(/\B(?=(\d{3})+(?!\d))/g, "'");
 }
 
-function render(value) {
-  counterEl.textContent = formatNumber(value);
+function createDigitElement(digit, index) {
+  const group = document.createElement('div');
+  group.className = 'digit-group';
+  
+  // For separators (apostrophes)
+  if (digit === "'") {
+    const separator = document.createElement('div');
+    separator.className = 'separator';
+    separator.textContent = "'";
+    group.appendChild(separator);
+    return group;
+  }
+  
+  // Create digit container
+  const container = document.createElement('div');
+  container.className = 'digit-container';
+  container.dataset.index = index;
+  
+  const digitDiv = document.createElement('div');
+  digitDiv.className = 'digit';
+  
+  const front = document.createElement('div');
+  front.className = 'digit-face digit-front';
+  
+  const back = document.createElement('div');
+  back.className = 'digit-face digit-back';
+  
+  const numberFront = document.createElement('div');
+  numberFront.className = 'digit-number';
+  numberFront.textContent = digit;
+  
+  const numberBack = document.createElement('div');
+  numberBack.className = 'digit-number';
+  numberBack.textContent = digit;
+  
+  front.appendChild(numberFront.cloneNode(true));
+  back.appendChild(numberBack.cloneNode(true));
+  
+  digitDiv.appendChild(front);
+  digitDiv.appendChild(back);
+  container.appendChild(digitDiv);
+  group.appendChild(container);
+  
+  return group;
+}
+
+function renderDigits(value) {
+  const formatted = formatNumber(value);
+  flipCounter.innerHTML = '';
+  digitElements = [];
+  
+  for (let i = 0; i < formatted.length; i++) {
+    const digitElement = createDigitElement(formatted[i], i);
+    flipCounter.appendChild(digitElement);
+    
+    if (formatted[i] !== "'") {
+      const container = digitElement.querySelector('.digit-container');
+      if (container) {
+        digitElements.push({
+          element: container.querySelector('.digit'),
+          front: container.querySelector('.digit-front .digit-number'),
+          back: container.querySelector('.digit-back .digit-number'),
+          index: i,
+          currentDigit: formatted[i]
+        });
+      }
+    }
+  }
+}
+
+function animateDigitFlip(digitObj, newDigit) {
+  if (digitObj.currentDigit === newDigit) return;
+  
+  // Set the new digit on the back face
+  digitObj.back.textContent = newDigit;
+  
+  // Start the flip animation
+  digitObj.element.classList.add('flipping');
+  
+  // After the flip, update the front face and reset
+  setTimeout(() => {
+    digitObj.front.textContent = newDigit;
+    digitObj.element.classList.remove('flipping');
+    digitObj.currentDigit = newDigit;
+  }, 300); // Half of the animation duration
 }
 
 function animateTo(target) {
-  cancelAnimationFrame(animationFrame);
-
-  function step() {
-    const diff = target - animatedValue;
-
-    if (Math.abs(diff) < 1) {
-      animatedValue = target;
-      render(animatedValue);
-      return;
+  const formattedCurrent = formatNumber(animatedValue);
+  const formattedTarget = formatNumber(target);
+  
+  // Pad with leading zeros if needed
+  const maxLength = Math.max(formattedCurrent.length, formattedTarget.length);
+  const currentPadded = formattedCurrent.padStart(maxLength, '0');
+  const targetPadded = formattedTarget.padStart(maxLength, '0');
+  
+  // Animate each digit that changed
+  let delay = 0;
+  for (let i = 0; i < maxLength; i++) {
+    if (currentPadded[i] !== targetPadded[i] && targetPadded[i] !== "'") {
+      // Find the corresponding digit element
+      const digitIndex = Array.from(targetPadded).slice(0, i + 1).filter(c => c !== "'").length - 1;
+      
+      if (digitElements[digitIndex]) {
+        setTimeout(() => {
+          animateDigitFlip(digitElements[digitIndex], targetPadded[i]);
+        }, delay);
+        
+        // Stagger the animations for a rolling effect
+        delay += 50;
+      }
     }
-
-    let delta;
-    const abs = Math.abs(diff);
-
-    if (abs > 1_000_000) delta = diff * 0.02;
-    else if (abs > 100_000) delta = diff * 0.04;
-    else if (abs > 10_000) delta = diff * 0.08;
-    else if (abs > 1_000) delta = diff * 0.15;
-    else delta = diff > 0 ? 10 : -10;
-
-    animatedValue += delta;
-    render(animatedValue);
-
-    animationFrame = requestAnimationFrame(step);
   }
-
-  step();
+  
+  // Update the animated value
+  animatedValue = target;
+  
+  // If no animations were triggered (all digits same), re-render to ensure consistency
+  if (delay === 0) {
+    setTimeout(() => {
+      renderDigits(target);
+    }, 100);
+  }
 }
 
 async function fetchData() {
@@ -213,11 +534,12 @@ async function fetchData() {
     if (newValue !== currentValue) {
       currentValue = newValue;
       animateTo(currentValue);
+      console.log('Data updated from Google Sheets:', newValue);
     }
   } catch (e) {
-    const demo = Math.floor(Math.random() * 50000000) + 150000000;
-    currentValue = demo;
-    animateTo(currentValue);
+    console.error('Error fetching data from Google Sheets:', e);
+    // Keep current value without demo mode
+    // In case of error, we'll try again in the next interval
   }
 }
 
@@ -225,11 +547,14 @@ function init() {
   const initialValue = 200061000;
   currentValue = initialValue;
   animatedValue = initialValue;
-  render(initialValue);
-
-  fetchData();
-  setInterval(fetchData, 15000);
-
+  
+  renderDigits(initialValue);
+  
+  // Start regular updates every 15 seconds
+  fetchData(); // Initial fetch
+  updateInterval = setInterval(fetchData, 15000); // Every 15 seconds
+  
+  // Update when tab becomes visible
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       fetchData();
@@ -238,6 +563,13 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// Clean up interval on page unload
+window.addEventListener('beforeunload', () => {
+  if (updateInterval) {
+    clearInterval(updateInterval);
+  }
+});
 </script>
 
 </body>
