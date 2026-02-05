@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>WoT Battle Tracker</title>
+  <script src="https://unpkg.com/wotstat-widgets-sdk"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: transparent;
+    }
+    .tracker {
+      background: rgba(0,0,0,0.5);
+      border: 2px solid #ffc107;
+      border-radius: 1em;
+      padding: 1rem;
+      width: 300px;
+      box-shadow: 0 0 10px rgba(255,193,7,0.5);
+      text-align: center;
+    }
+    .tracker h2 {
+      margin: 0 0 0.5rem;
+      color: #ffc107;
+    }
+    .tracker p {
+      margin: 0.3rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="tracker">
+    <h2>WoT Battle Tracker</h2>
+    <p>Кредити: <span id="credits">0</span></p>
+    <p>Бої: <span id="battles">0</span></p>
+    <p>Перемоги: <span id="wins">0</span></p>
+  </div>
+
+  <script type="module">
+    import { WidgetSDK } from 'https://unpkg.com/wotstat-widgets-sdk?module';
+
+    const sdk = new WidgetSDK();
+
+    let totalCredits = 0;
+    let battleCount = 0;
+    let winCount = 0;
+
+    let lastBattleKey = null;
+    let battleLocked = false;
+
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyt5kK9Vs7hVNevK4JY4YiubPdErlFpTi8JQ50i7AkeaKMKelBcJMQz40uol7rxiCtbpA/exec";
+
+    function updateUI() {
+      document.getElementById('credits').textContent = totalCredits.toLocaleString('uk-UA');
+      document.getElementById('battles').textContent = battleCount;
+      document.getElementById('wins').textContent = winCount;
+    }
+
+    function sendToSheet(payload) {
+      const query = new URLSearchParams(payload).toString();
+      fetch(`${SCRIPT_URL}?${query}`)
+        .then(res => res.text())
+        .then(txt => console.log("Sheet:", txt))
+        .catch(err => console.error("Sheet error:", err));
+    }
+
+    sdk.data.battle.onBattleResult.watch(result => {
+      if (!result || !result.personal) return;
+      if (battleLocked) return;
+
+      const pid = Object.keys(result.personal)[0];
+      const personal = result.personal[pid];
+
+      const earned = personal.credits || 0;
+      const repair = personal.autoRepairCost || 0;
+      const equip  = personal.autoEquipCost?.[0] || 0;
+      const load   = personal.autoLoadCost?.[0] || 0;
+      const netCredits = earned - (repair + equip + load);
+
+      const tankName = sdk.data.tank.name.value || '';
+      const mapName  = sdk.data.map.name.value || '';
+      const damage   = personal.damageDealt || 0;
+
+      const battleKey = `${tankName}|${mapName}|${damage}|${netCredits}`;
+      if (battleKey === lastBattleKey) return;
+
+      lastBattleKey = battleKey;
+      battleLocked = true;
+
+      const myId = sdk.data.player.id.value;
+      const teamId = result.players[myId]?.team;
+      const winner = result.common?.winnerTeam;
+      const isWin = teamId && winner && Number(teamId) === Number(winner);
+
+      if (isWin) winCount++;
+      totalCredits += netCredits;
+      battleCount++;
+
+      updateUI();
+
+      const payload = {
+        time: new Date().toLocaleString('uk-UA'),
+        battle: battleCount,
+        tank: tankName,
+        map: mapName,
+        win: isWin ? 'Перемога' : 'Поразка',
+        damage: damage,
+        assist: (personal.damageAssisted || 0) + (personal.spottedAssisted || 0),
+        credits: netCredits
+      };
+
+      console.log("📤 Battle запис:", payload);
+      sendToSheet(payload);
+    });
+
+    sdk.data.battle.isInBattle.watch(inBattle => {
+      if (!inBattle) {
+        battleLocked = false;
+      }
+    });
+  </script>
+</body>
+</html>
