@@ -1,129 +1,244 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <title>WoT Battle Tracker</title>
-  <script src="https://unpkg.com/wotstat-widgets-sdk"></script>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: transparent;
-    }
-    .tracker {
-      background: rgba(0,0,0,0.5);
-      border: 2px solid #ffc107;
-      border-radius: 1em;
-      padding: 1rem;
-      width: 300px;
-      box-shadow: 0 0 10px rgba(255,193,7,0.5);
-      text-align: center;
-    }
-    .tracker h2 {
-      margin: 0 0 0.5rem;
-      color: #ffc107;
-    }
-    .tracker p {
-      margin: 0.3rem 0;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>WOT Credits Counter (OBS)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root {
+  --bg: #0b0f14;
+  --panel: #141a22;
+  --border: #2a323d;
+  --text: #eaeef3;
+  --muted: #9aa4b2;
+  --accent: #ffcc00;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: transparent;
+  font-family: 'Montserrat', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.widget {
+  background: linear-gradient(180deg, #121821, #0b0f14);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 30px 40px;
+  min-width: 720px;
+  text-align: center;
+}
+
+.title {
+  font-family: 'Russo One', sans-serif;
+  font-size: 42px;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.counter {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 30px 20px;
+  margin-bottom: 30px;
+}
+
+.counter-value {
+  font-family: 'Russo One', sans-serif;
+  font-size: 96px;
+  letter-spacing: 4px;
+  color: var(--accent);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.action {
+  background: #11161d;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 15px;
+}
+
+.action i {
+  font-size: 28px;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.action-text {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.action-value {
+  font-family: 'Russo One', sans-serif;
+  font-size: 22px;
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .widget {
+    min-width: auto;
+    width: 100%;
+    padding: 25px 20px;
+  }
+  .counter-value {
+    font-size: 72px;
+  }
+  .title {
+    font-size: 32px;
+  }
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .counter-value {
+    font-size: 56px;
+    letter-spacing: 2px;
+  }
+}
+</style>
 </head>
 <body>
-  <div class="tracker">
-    <h2>WoT Battle Tracker</h2>
-    <p>Кредити: <span id="credits">0</span></p>
-    <p>Бої: <span id="battles">0</span></p>
-    <p>Перемоги: <span id="wins">0</span></p>
+
+<div class="widget">
+  <div class="title">Залишилось нафармити</div>
+
+  <div class="counter">
+    <div id="counterValue" class="counter-value">0</div>
   </div>
 
-  <script type="module">
-    import { WidgetSDK } from 'https://unpkg.com/wotstat-widgets-sdk?module';
+  <div class="actions">
+    <div class="action">
+      <i class="fas fa-money-bill-wave"></i>
+      <div class="action-text">Кожні 1 грн донату</div>
+      <div class="action-value">+1 000</div>
+    </div>
 
-    const sdk = new WidgetSDK();
+    <div class="action">
+      <i class="fas fa-heart"></i>
+      <div class="action-text">Кожен лайк</div>
+      <div class="action-value">+5 000</div>
+    </div>
 
-    let totalCredits = 0;
-    let battleCount = 0;
-    let winCount = 0;
+    <div class="action">
+      <i class="fab fa-tiktok"></i>
+      <div class="action-text">Тап у TikTok</div>
+      <div class="action-value">+5</div>
+    </div>
+  </div>
+</div>
 
-    let lastBattleKey = null;
-    let battleLocked = false;
+<script>
+let currentValue = 0;
+let animatedValue = 0;
+let animationFrame = null;
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyt5kK9Vs7hVNevK4JY4YiubPdErlFpTi8JQ50i7AkeaKMKelBcJMQz40uol7rxiCtbpA/exec";
+const counterEl = document.getElementById('counterValue');
 
-    function updateUI() {
-      document.getElementById('credits').textContent = totalCredits.toLocaleString('uk-UA');
-      document.getElementById('battles').textContent = battleCount;
-      document.getElementById('wins').textContent = winCount;
+function formatNumber(num) {
+  return Math.floor(num)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+}
+
+function render(value) {
+  counterEl.textContent = formatNumber(value);
+}
+
+function animateTo(target) {
+  cancelAnimationFrame(animationFrame);
+
+  function step() {
+    const diff = target - animatedValue;
+
+    if (Math.abs(diff) < 1) {
+      animatedValue = target;
+      render(animatedValue);
+      return;
     }
 
-    function sendToSheet(payload) {
-      const query = new URLSearchParams(payload).toString();
-      fetch(`${SCRIPT_URL}?${query}`)
-        .then(res => res.text())
-        .then(txt => console.log("Sheet:", txt))
-        .catch(err => console.error("Sheet error:", err));
+    let delta;
+    const abs = Math.abs(diff);
+
+    if (abs > 1_000_000) delta = diff * 0.02;
+    else if (abs > 100_000) delta = diff * 0.04;
+    else if (abs > 10_000) delta = diff * 0.08;
+    else if (abs > 1_000) delta = diff * 0.15;
+    else delta = diff > 0 ? 10 : -10;
+
+    animatedValue += delta;
+    render(animatedValue);
+
+    animationFrame = requestAnimationFrame(step);
+  }
+
+  step();
+}
+
+async function fetchData() {
+  const sheetId = '17phnEn-NW-OnrZg4DcW65r-Xoq6ScsdVjS5yL0SS3fk';
+  const sheetName = 'FARM';
+  const cellRange = 'C10';
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=${cellRange}`;
+
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+    const newValue = Math.round(json.table.rows[0].c[0].v);
+
+    if (newValue !== currentValue) {
+      currentValue = newValue;
+      animateTo(currentValue);
     }
+  } catch (e) {
+    const demo = Math.floor(Math.random() * 50000000) + 150000000;
+    currentValue = demo;
+    animateTo(currentValue);
+  }
+}
 
-    sdk.data.battle.onBattleResult.watch(result => {
-      if (!result || !result.personal) return;
-      if (battleLocked) return;
+function init() {
+  const initialValue = 200061000;
+  currentValue = initialValue;
+  animatedValue = initialValue;
+  render(initialValue);
 
-      const pid = Object.keys(result.personal)[0];
-      const personal = result.personal[pid];
+  fetchData();
+  setInterval(fetchData, 15000);
 
-      const earned = personal.credits || 0;
-      const repair = personal.autoRepairCost || 0;
-      const equip  = personal.autoEquipCost?.[0] || 0;
-      const load   = personal.autoLoadCost?.[0] || 0;
-      const netCredits = earned - (repair + equip + load);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      fetchData();
+    }
+  });
+}
 
-      const tankName = sdk.data.tank.name.value || '';
-      const mapName  = sdk.data.map.name.value || '';
-      const damage   = personal.damageDealt || 0;
+document.addEventListener('DOMContentLoaded', init);
+</script>
 
-      const battleKey = `${tankName}|${mapName}|${damage}|${netCredits}`;
-      if (battleKey === lastBattleKey) return;
-
-      lastBattleKey = battleKey;
-      battleLocked = true;
-
-      const myId = sdk.data.player.id.value;
-      const teamId = result.players[myId]?.team;
-      const winner = result.common?.winnerTeam;
-      const isWin = teamId && winner && Number(teamId) === Number(winner);
-
-      if (isWin) winCount++;
-      totalCredits += netCredits;
-      battleCount++;
-
-      updateUI();
-
-      const payload = {
-        time: new Date().toLocaleString('uk-UA'),
-        battle: battleCount,
-        tank: tankName,
-        map: mapName,
-        win: isWin ? 'Перемога' : 'Поразка',
-        damage: damage,
-        assist: (personal.damageAssisted || 0) + (personal.spottedAssisted || 0),
-        credits: netCredits
-      };
-
-      console.log("📤 Battle запис:", payload);
-      sendToSheet(payload);
-    });
-
-    sdk.data.battle.isInBattle.watch(inBattle => {
-      if (!inBattle) {
-        battleLocked = false;
-      }
-    });
-  </script>
 </body>
 </html>
