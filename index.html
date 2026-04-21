@@ -23,8 +23,7 @@
   --shadow: rgba(0, 0, 0, 0.4);
   --success: #00d9a6;
   --danger: #ff4757;
-  
-  /* Gold theme colors */
+
   --gold-dark: #1a1400;
   --gold-medium: #3d3200;
   --gold-light: #d4af37;
@@ -199,14 +198,6 @@ body {
   text-shadow: 0 0 15px var(--accent-glow);
 }
 
-.counter-label {
-  font-size: 40px;
-  color: var(--muted);
-  margin-top: 25px;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-
 .stats-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -214,7 +205,6 @@ body {
   margin-bottom: 35px;
 }
 
-/* Blue stats blocks (top two) */
 .stat {
   background: linear-gradient(180deg, #161e30, #121826);
   border: 2px solid var(--border);
@@ -256,13 +246,13 @@ body {
   text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
   font-variant-numeric: tabular-nums;
 }
-.stat-value .group-sep{
-  display:inline-block;
-  width:40px;
-  text-align:center;
+
+.stat-value .group-sep {
+  display: inline-block;
+  width: 40px;
+  text-align: center;
 }
 
-/* Gold action blocks (bottom three) */
 .actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -318,29 +308,29 @@ body {
     width: 95%;
     padding: 30px 25px;
   }
-  
+
   .digit-container {
     width: 60px;
     height: 95px;
   }
-  
+
   .digit-number, .separator {
     font-size: 68px;
   }
-  
+
   .separator {
     margin: 0 15px;
   }
-  
+
   .title {
     font-size: 32px;
   }
-  
+
   .stats-row {
     grid-template-columns: 1fr;
     gap: 15px;
   }
-  
+
   .actions {
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
@@ -351,52 +341,47 @@ body {
   .widget {
     padding: 25px 20px;
   }
-  
+
   .digit-container {
     width: 45px;
     height: 75px;
     margin: 0 1px;
   }
-  
+
   .digit-number, .separator {
     font-size: 52px;
   }
-  
+
   .separator {
     margin: 0 10px;
     font-size: 52px;
     height: 75px;
   }
-  
+
   .flip-counter {
     height: 100px;
   }
-  
+
   .title {
     font-size: 28px;
   }
-  
+
   .stat, .action {
     padding: 18px 12px;
   }
-  
+
   .stat i, .action i {
     font-size: 28px;
   }
-  
+
   .stat-value, .action-value {
     font-size: 40px;
   }
-  
-  .counter-label {
-    font-size: 18px;
-    margin-top: 20px;
-  }
-  
+
   .stats-row {
     grid-template-columns: 1fr;
   }
-  
+
   .actions {
     grid-template-columns: 1fr;
     gap: 15px;
@@ -408,29 +393,25 @@ body {
     width: 35px;
     height: 60px;
   }
-  
+
   .digit-number, .separator {
     font-size: 40px;
   }
-  
+
   .separator {
     margin: 0 8px;
     font-size: 40px;
     height: 60px;
   }
-  
+
   .title {
     font-size: 24px;
   }
-  
-  .counter-label {
-    font-size: 16px;
-  }
-  
+
   .stat-text, .action-text {
     font-size: 24px;
   }
-  
+
   .stat-value, .action-value {
     font-size: 32px;
   }
@@ -482,7 +463,7 @@ body {
 </div>
 
 <script>
-let currentValue = 200061000;
+let currentValue = 0;
 let previousDigits = [];
 let digitElements = [];
 let updateInterval = null;
@@ -490,6 +471,9 @@ let updateInterval = null;
 const flipCounter = document.getElementById('flipCounter');
 const alreadyFarmedElement = document.getElementById('alreadyFarmed');
 const viewersAddedElement = document.getElementById('viewersAdded');
+
+const sheetId = '17phnEn-NW-OnrZg4DcW65r-Xoq6ScsdVjS5yL0SS3fk';
+const sheetName = 'FARM';
 
 function formatNumber(num) {
   return Math.floor(num)
@@ -504,7 +488,7 @@ function getDigitsArray(num) {
 function createDigitGroup(digit, isSeparator = false) {
   const group = document.createElement('div');
   group.className = 'digit-group';
-  
+
   if (isSeparator) {
     const separator = document.createElement('div');
     separator.className = 'separator';
@@ -512,69 +496,69 @@ function createDigitGroup(digit, isSeparator = false) {
     group.appendChild(separator);
     return group;
   }
-  
+
   const container = document.createElement('div');
   container.className = 'digit-container';
-  
+
   const digitDiv = document.createElement('div');
   digitDiv.className = 'digit';
-  
+
   const front = document.createElement('div');
   front.className = 'digit-face digit-front';
-  
+
   const back = document.createElement('div');
   back.className = 'digit-face digit-back';
-  
+
   const numberFront = document.createElement('div');
   numberFront.className = 'digit-number';
   numberFront.textContent = digit;
-  
+
   const numberBack = document.createElement('div');
   numberBack.className = 'digit-number';
   numberBack.textContent = digit;
-  
+
   front.appendChild(numberFront);
   back.appendChild(numberBack);
-  
+
   digitDiv.appendChild(front);
   digitDiv.appendChild(back);
   container.appendChild(digitDiv);
   group.appendChild(container);
-  
+
   return { group, digitDiv, front: numberFront, back: numberBack };
 }
 
 function insertSeparators(digitsArray) {
   const result = [];
   let count = 0;
-  
+
   for (let i = digitsArray.length - 1; i >= 0; i--) {
     result.unshift(digitsArray[i]);
     count++;
-    
+
     if (count % 3 === 0 && i > 0) {
       result.unshift("'");
     }
   }
-  
+
   return result;
 }
 
 function renderFullNumber(value) {
   flipCounter.innerHTML = '';
   digitElements = [];
-  
+
   const digits = getDigitsArray(value);
   const displayArray = insertSeparators(digits);
-  
-  displayArray.forEach((char, index) => {
+
+  displayArray.forEach((char) => {
     if (char === "'") {
       const group = createDigitGroup("'", true);
       flipCounter.appendChild(group);
     } else {
       const { group, digitDiv, front, back } = createDigitGroup(char);
       flipCounter.appendChild(group);
-      
+
       digitElements.push({
         element: digitDiv,
         front,
@@ -583,16 +567,16 @@ function renderFullNumber(value) {
       });
     }
   });
-  
+
   previousDigits = digits;
 }
 
 function animateDigitFlip(digitObj, newDigit) {
   if (digitObj.currentDigit === newDigit) return;
-  
+
   digitObj.back.textContent = newDigit;
   digitObj.element.classList.add('flipping');
-  
+
   setTimeout(() => {
     digitObj.front.textContent = newDigit;
     digitObj.element.classList.remove('flipping');
@@ -602,82 +586,71 @@ function animateDigitFlip(digitObj, newDigit) {
 
 function animateTo(newValue) {
   const newDigits = getDigitsArray(newValue);
-  
+
   if (newDigits.length !== previousDigits.length) {
     renderFullNumber(newValue);
     currentValue = newValue;
     return;
   }
-  
+
   let delay = 0;
   let needsAnimation = false;
-  
+
   for (let i = 0; i < newDigits.length; i++) {
     if (newDigits[i] !== previousDigits[i]) {
       needsAnimation = true;
       setTimeout(() => {
         animateDigitFlip(digitElements[i], newDigits[i]);
       }, delay);
-      
+
       delay += 50;
     }
   }
-  
+
   if (needsAnimation) {
     previousDigits = newDigits;
     currentValue = newValue;
   }
 }
 
+async function getCellValue(cell) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=${cell}`;
+  const response = await fetch(url);
+  const text = await response.text();
+  const json = JSON.parse(text.substring(47).slice(0, -2));
+  const value = json.table.rows?.[0]?.c?.[0]?.v;
+  return Math.round(Number(value) || 0);
+}
+
 async function fetchData() {
-  const sheetId = '17phnEn-NW-OnrZg4DcW65r-Xoq6ScsdVjS5yL0SS3fk';
-  const sheetName = 'FARM';
-  const urlC6 = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=C6`;
-  const urlC8 = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=C8`;
-  const urlC10 = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=C10`;
-
   try {
-    const responseC10 = await fetch(urlC10);
-    const textC10 = await responseC10.text();
-    const jsonC10 = JSON.parse(textC10.substring(47).slice(0, -2));
-    const targetValue = Math.round(jsonC10.table.rows[0].c[0].v);
-    
-    const responseC6 = await fetch(urlC6);
-    const textC6 = await responseC6.text();
-    const jsonC6 = JSON.parse(textC6.substring(47).slice(0, -2));
-    const viewersAdded = Math.round(jsonC6.table.rows[0].c[0].v);
-    
-    const responseC8 = await fetch(urlC8);
-    const textC8 = await responseC8.text();
-    const jsonC8 = JSON.parse(textC8.substring(47).slice(0, -2));
-    const alreadyFarmed = Math.round(jsonC8.table.rows[0].c[0].v);
+    const [viewersAdded, alreadyFarmed, leftToFarm] = await Promise.all([
+      getCellValue('C6'),
+      getCellValue('C8'),
+      getCellValue('C10')
+    ]);
 
-    alreadyFarmedElement.innerHTML = formatNumber(alreadyFarmed);
     viewersAddedElement.innerHTML = formatNumber(viewersAdded);
-    
-    if (targetValue !== currentValue && targetValue > 0) {
-      animateTo(targetValue);
+    alreadyFarmedElement.innerHTML = formatNumber(alreadyFarmed);
+
+    if (leftToFarm !== currentValue) {
+      animateTo(leftToFarm);
     }
-    
+
     console.log(`Оновлено: ${new Date().toLocaleTimeString()}`);
-    console.log(`Залишилось нафармити (C10): ${targetValue}`);
     console.log(`Додали глядачі (C6): ${viewersAdded}`);
     console.log(`Вже нафармив (C8): ${alreadyFarmed}`);
+    console.log(`Залишилось нафармити (D10): ${leftToFarm}`);
   } catch (e) {
     console.error('Error fetching data from Google Sheets:', e);
   }
 }
 
 function init() {
-  const initialValue = 200061000;
-  currentValue = initialValue;
-  previousDigits = getDigitsArray(initialValue);
-  
-  renderFullNumber(initialValue);
-  
+  renderFullNumber(0);
   fetchData();
   updateInterval = setInterval(fetchData, 2000);
-  
+
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       fetchData();
